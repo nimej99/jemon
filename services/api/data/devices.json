@@ -1,1 +1,12 @@
-[]
+[
+  {
+    "id": "test-device-masking",
+    "name": "Test Router",
+    "siteId": "site-1",
+    "ip": "192.168.1.100",
+    "snmp": {
+      "version": "v2c",
+      "community": "0c258fae95650e4b7a6c342f:307b8d1e43a662a12f26b1e69a998291:72562e116116"
+    }
+  }
+]

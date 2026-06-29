@@ -1,0 +1,27 @@
+{
+  "current_phase": "handoff",
+  "skill": "ultragoal",
+  "version": 2,
+  "active": true,
+  "updated_at": "2026-06-29T16:13:30.482Z",
+  "receipt": {
+    "version": 1,
+    "skill": "ultragoal",
+    "owner": "gjc-state-cli",
+    "command": "gjc state ultragoal write",
+    "state_path": "/Users/kangjaemin/Desktop/workspace/jemon/.gjc/state/sessions/019f0ede-9557-7000-b68b-fbd1241d1b53/skill-active-state.json",
+    "storage_path": "/Users/kangjaemin/Desktop/workspace/jemon/.gjc/state/sessions/019f0ede-9557-7000-b68b-fbd1241d1b53/ultragoal-state.json",
+    "mutated_at": "2026-06-29T16:13:30.482Z",
+    "fresh_until": "2026-06-29T16:43:30.482Z",
+    "status": "fresh",
+    "mutation_id": "ultragoal:2026-06-29T16:13:30.482Z",
+    "content_sha256": {
+      "algorithm": "sha256",
+      "value": "b25cc35f9e512596e2fe0f041bee95d94cb539990ad34588c8b36663eeb43f4b",
+      "covered_path": "/Users/kangjaemin/Desktop/workspace/jemon/.gjc/_session-019f0ede-9557-7000-b68b-fbd1241d1b53/state/ultragoal-state.json",
+      "computed_at": "2026-06-29T16:13:30.484Z"
+    }
+  },
+  "session_id": "019f0ede-9557-7000-b68b-fbd1241d1b53",
+  "state_revision": 1
+}
