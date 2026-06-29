@@ -7,13 +7,15 @@
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "default": "./dist/index.js"
     },
     "./preset": "./dist/theme/preset.js",
     "./scenes": {
+      "types": "./dist/scenes/index.d.ts",
       "import": "./dist/scenes/index.js",
-      "types": "./dist/scenes/index.d.ts"
+      "default": "./dist/scenes/index.js"
     }
   },
   "scripts": {
