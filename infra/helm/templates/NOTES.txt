@@ -1,1 +1,7 @@
-jemon Helm chart (P0 skeleton). Full templates land in P5.
+jemon {{ .Chart.AppVersion }} deployed successfully.
+
+  Web dashboard : kubectl port-forward svc/{{ include "jemon.fullname" . }}-web 3000:3000
+  API           : kubectl port-forward svc/{{ include "jemon.fullname" . }}-api 3001:3001
+  VictoriaMetrics: kubectl port-forward svc/{{ include "jemon.fullname" . }}-victoriametrics 8428:8428
+
+For offline installation see: scripts/offline-bundle.sh

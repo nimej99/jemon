@@ -1,4 +1,40 @@
-# P0 placeholder — 실제 빌드는 P3/P5
-FROM node:22-slim
+# ── stage 1: full workspace for building ─────────────────────────────────────
+FROM node:20-slim AS base
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable && corepack prepare pnpm@9.15.9 --activate
+
+FROM base AS builder
+WORKDIR /build
+
+# Copy manifests first for layer-cache efficiency
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml .npmrc ./
+COPY apps/web/package.json             apps/web/package.json
+COPY services/api/package.json         services/api/package.json
+COPY packages/catalog/package.json     packages/catalog/package.json
+COPY packages/metric-sdk/package.json  packages/metric-sdk/package.json
+COPY packages/ui/package.json          packages/ui/package.json
+
+RUN pnpm install --frozen-lockfile
+
+# Copy the rest of the source
+COPY . .
+
+# Build Next.js with standalone output
+ENV NEXT_TELEMETRY_DISABLED=1
+RUN pnpm --filter @jemon/web build
+
+# ── stage 2: minimal standalone runtime ───────────────────────────────────────
+FROM node:20-slim AS runner
 WORKDIR /app
-CMD ["node","-e","console.log('jemon web placeholder')"]
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# Next standalone bundle already includes its own node_modules subset
+COPY --from=builder /build/apps/web/.next/standalone ./
+COPY --from=builder /build/apps/web/.next/static      ./apps/web/.next/static
+# public/ is optional; copy if it exists (use glob trick via shell layer)
+COPY --from=builder /build/apps/web/public            ./apps/web/public
+
+EXPOSE 3000
+CMD ["node", "apps/web/server.js"]

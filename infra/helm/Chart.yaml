@@ -1,6 +1,13 @@
 apiVersion: v2
 name: jemon
-description: jemon on-prem monitoring appliance (P0 skeleton)
+description: jemon on-prem monitoring appliance — web dashboard + API + VictoriaMetrics + Valkey
 type: application
-version: 0.0.0
-appVersion: "0.0.0"
+version: 0.5.0
+appVersion: "0.5.0"
+keywords:
+  - monitoring
+  - snmp
+  - observability
+maintainers:
+  - name: nimej99
+    email: aaron9909@naver.com

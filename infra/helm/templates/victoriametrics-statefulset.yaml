@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "jemon.fullname" . }}-victoriametrics
+  labels:
+    {{- include "jemon.labels" . | nindent 4 }}
+    app.kubernetes.io/component: victoriametrics
+spec:
+  serviceName: {{ include "jemon.fullname" . }}-victoriametrics
+  replicas: {{ .Values.victoriametrics.replicas }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "jemon.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: victoriametrics
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "jemon.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: victoriametrics
+    spec:
+      containers:
+        - name: victoriametrics
+          image: "{{ .Values.victoriametrics.image }}:{{ .Values.victoriametrics.imageTag }}"
+          imagePullPolicy: IfNotPresent
+          args:
+            - "-storageDataPath=/vmdata"
+            - "-retentionPeriod={{ .Values.victoriametrics.retention }}"
+            - "-httpListenAddr=:{{ .Values.victoriametrics.service.port }}"
+          ports:
+            - name: http
+              containerPort: {{ .Values.victoriametrics.service.port }}
+              protocol: TCP
+          volumeMounts:
+            - name: vmdata
+              mountPath: /vmdata
+          resources:
+            {{- toYaml .Values.victoriametrics.resources | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 30
+  volumeClaimTemplates:
+    - metadata:
+        name: vmdata
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        {{- if .Values.victoriametrics.storageClass }}
+        storageClassName: {{ .Values.victoriametrics.storageClass | quote }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.victoriametrics.storageSize }}

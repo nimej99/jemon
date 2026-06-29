@@ -1,4 +1,40 @@
-# P0 placeholder — 실제 빌드는 P1/P5
-FROM node:22-slim
+# ── stage 1: full workspace for building ─────────────────────────────────────
+FROM node:20-slim AS base
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable && corepack prepare pnpm@9.15.9 --activate
+
+FROM base AS builder
+WORKDIR /build
+
+# Copy manifests first for layer-cache efficiency
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml .npmrc ./
+COPY apps/web/package.json             apps/web/package.json
+COPY services/api/package.json         services/api/package.json
+COPY packages/catalog/package.json     packages/catalog/package.json
+COPY packages/metric-sdk/package.json  packages/metric-sdk/package.json
+COPY packages/ui/package.json          packages/ui/package.json
+
+RUN pnpm install --frozen-lockfile
+
+# Copy the rest of the source
+COPY . .
+
+# Compile TypeScript for @jemon/api (and its workspace deps)
+RUN pnpm --filter @jemon/catalog build 2>/dev/null || true
+RUN pnpm --filter @jemon/api build
+
+# Prune to a production-only deployment directory
+RUN pnpm deploy --filter @jemon/api --prod /deploy
+
+# ── stage 2: minimal runtime image ────────────────────────────────────────────
+FROM node:20-slim AS runner
 WORKDIR /app
-CMD ["node","-e","console.log('jemon api placeholder')"]
+ENV NODE_ENV=production
+
+COPY --from=builder /deploy/package.json  ./package.json
+COPY --from=builder /deploy/node_modules  ./node_modules
+COPY --from=builder /deploy/dist          ./dist
+
+EXPOSE 3001
+CMD ["node", "dist/index.js"]

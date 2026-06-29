@@ -1,10 +1,84 @@
-# P0 skeleton values (full chart in P5)
+## jemon Helm values
+## Override per-environment with -f values-prod.yaml
+
 image:
   registry: ghcr.io/nimej99
-  tag: dev
-victoriametrics:
-  retention: 30d
+  pullPolicy: IfNotPresent
+  tag: "0.5.0"
+
+## ── API ──────────────────────────────────────────────────────────────────────
 api:
   replicas: 1
+  image:
+    repository: jemon-api
+    # tag: override to pin; falls back to image.tag
+  service:
+    type: ClusterIP
+    port: 3001
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+  env:
+    PORT: "3001"
+
+## ── Web ─────────────────────────────────────────────────────────────────────
 web:
   replicas: 1
+  image:
+    repository: jemon-web
+    # tag: override to pin; falls back to image.tag
+  service:
+    type: ClusterIP
+    port: 3000
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+  env:
+    NEXT_PUBLIC_API_URL: "http://jemon-api:3001"
+
+## ── VictoriaMetrics ──────────────────────────────────────────────────────────
+victoriametrics:
+  image: victoriametrics/victoria-metrics
+  imageTag: v1.111.0
+  replicas: 1
+  retention: 30d
+  storageSize: 10Gi
+  storageClass: ""   # use cluster default if empty
+  service:
+    type: ClusterIP
+    port: 8428
+  resources:
+    requests:
+      cpu: "200m"
+      memory: "256Mi"
+    limits:
+      cpu: "1000m"
+      memory: "1Gi"
+
+## ── Valkey ───────────────────────────────────────────────────────────────────
+valkey:
+  image: valkey/valkey
+  imageTag: "8-alpine"
+  replicas: 1
+  service:
+    type: ClusterIP
+    port: 6379
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "64Mi"
+    limits:
+      cpu: "200m"
+      memory: "256Mi"
+
+## ── Global config map data ───────────────────────────────────────────────────
+config:
+  vmagentScrapeInterval: 30s
