@@ -1,0 +1,14 @@
+{
+  "MIT": [
+    {
+      "name": "ok-pkg",
+      "version": "1.0.0"
+    }
+  ],
+  "Apache-2.0": [
+    {
+      "name": "fine-pkg",
+      "version": "2.0.0"
+    }
+  ]
+}

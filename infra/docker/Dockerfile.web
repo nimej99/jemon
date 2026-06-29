@@ -1,0 +1,4 @@
+# P0 placeholder — 실제 빌드는 P3/P5
+FROM node:22-slim
+WORKDIR /app
+CMD ["node","-e","console.log('jemon web placeholder')"]

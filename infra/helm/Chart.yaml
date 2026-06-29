@@ -1,0 +1,6 @@
+apiVersion: v2
+name: jemon
+description: jemon on-prem monitoring appliance (P0 skeleton)
+type: application
+version: 0.0.0
+appVersion: "0.0.0"

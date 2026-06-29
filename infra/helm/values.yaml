@@ -1,0 +1,10 @@
+# P0 skeleton values (full chart in P5)
+image:
+  registry: ghcr.io/nimej99
+  tag: dev
+victoriametrics:
+  retention: 30d
+api:
+  replicas: 1
+web:
+  replicas: 1

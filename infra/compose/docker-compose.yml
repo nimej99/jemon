@@ -1,0 +1,27 @@
+name: jemon
+services:
+  victoriametrics:
+    image: victoriametrics/victoria-metrics:v1.111.0
+    container_name: jemon-vm
+    command:
+      - "-storageDataPath=/vmdata"
+      - "-retentionPeriod=30d"
+      - "-httpListenAddr=:8428"
+    ports:
+      - "8428:8428"
+    volumes:
+      - vmdata:/vmdata
+    restart: unless-stopped
+  valkey:
+    image: valkey/valkey:8-alpine
+    container_name: jemon-valkey
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+  snmpd-test:
+    image: whyit/snmpd_test
+    container_name: jemon-snmpd-test
+    restart: unless-stopped
+  # api/web 서비스는 P1/P3에서 추가
+volumes:
+  vmdata:
