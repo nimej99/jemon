@@ -8,5 +8,31 @@
       "version": "v2c",
       "community": "0c258fae95650e4b7a6c342f:307b8d1e43a662a12f26b1e69a998291:72562e116116"
     }
+  },
+  {
+    "id": "e2e-device-001",
+    "name": "Core Switch",
+    "siteId": "site-hq",
+    "ip": "10.0.0.1",
+    "snmp": {
+      "version": "v2c",
+      "community": "25cfafa1bd7528833891002e:b907ade6014226524caca7edcd3dac1e:cbf94c8b322a"
+    }
+  },
+  {
+    "id": "e2e-device-v3-001",
+    "name": "Edge Router",
+    "siteId": "site-dr",
+    "ip": "10.0.1.1",
+    "snmp": {
+      "version": "v3",
+      "v3": {
+        "user": "snmpv3user",
+        "authProto": "SHA",
+        "authKey": "99db7a73f66baaf57585060d:a0a311463a0e0074db36c00d81538b24:3a3f75f5eb9a59f4fb04b7863536da",
+        "privProto": "AES",
+        "privKey": "b0b3ddbfeeb9a3cbd84db2b1:d5261c00755d37dc0144498b69303835:d1bb3ec0a2f636a658ec5c401ddc0f"
+      }
+    }
   }
 ]
