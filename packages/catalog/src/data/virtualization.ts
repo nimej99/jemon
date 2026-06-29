@@ -1,0 +1,51 @@
+import type { CatalogEntry } from '../schema.js';
+
+export const virtualizationEntries: CatalogEntry[] = [
+  {
+    key: 'virt.cpu_usage_pct',
+    domain: 'virtualization',
+    title: 'VM CPU Usage',
+    unit: '%',
+    source: { kind: 'exporter', metric: 'vmware_vm_cpu_usage_average' },
+    agg: 'avg',
+    kpi: { expr: 'virt.cpu_usage_pct', warn: 80, crit: 95 },
+    panel: 'gauge',
+  },
+  {
+    key: 'virt.mem_usage_bytes',
+    domain: 'virtualization',
+    title: 'VM Memory Usage',
+    unit: 'bytes',
+    source: { kind: 'exporter', metric: 'vmware_vm_mem_usage_average' },
+    agg: 'avg',
+    kpi: { expr: 'virt.mem_usage_bytes', warn: 0.85, crit: 0.95 },
+    panel: 'gauge',
+  },
+  {
+    key: 'virt.disk_io_kbps',
+    domain: 'virtualization',
+    title: 'VM Disk I/O',
+    unit: 'KBps',
+    source: { kind: 'exporter', metric: 'vmware_vm_disk_io_rate' },
+    agg: 'avg',
+    panel: 'line',
+  },
+  {
+    key: 'virt.net_rx_bytes',
+    domain: 'virtualization',
+    title: 'VM Network Receive',
+    unit: 'bps',
+    source: { kind: 'exporter', metric: 'vmware_vm_net_received_average' },
+    agg: 'rate',
+    panel: 'line',
+  },
+  {
+    key: 'virt.vm_power_state',
+    domain: 'virtualization',
+    title: 'VM Power State',
+    unit: '',
+    source: { kind: 'exporter', metric: 'vmware_vm_power_state' },
+    agg: 'last',
+    panel: 'stat',
+  },
+];
