@@ -11,7 +11,7 @@ jobs:
         with: { version: 9.15.9 }
       - uses: actions/setup-node@v4
         with: { node-version: 22, cache: pnpm }
-      - run: pnpm install --frozen-lockfile=false
+      - run: pnpm install --frozen-lockfile
       - name: License allowlist gate
         run: pnpm run check:licenses
       - name: Self-test (must fail on AGPL fixture)
