@@ -6,8 +6,15 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
-    ".": "./dist/index.js",
-    "./preset": "./dist/theme/preset.js"
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./preset": "./dist/theme/preset.js",
+    "./scenes": {
+      "import": "./dist/scenes/index.js",
+      "types": "./dist/scenes/index.d.ts"
+    }
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
@@ -21,10 +28,19 @@
   },
   "peerDependencies": {
     "react": ">=18",
-    "react-dom": ">=18"
+    "react-dom": ">=18",
+    "three": ">=0.160.0",
+    "@react-three/fiber": ">=8.0.0",
+    "@react-three/drei": ">=9.0.0"
   },
   "devDependencies": {
-    "@types/react": "^18.3.12",
-    "@types/react-dom": "^18.3.1"
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "@types/three": "^0.170.0",
+    "@react-three/fiber": "^8.17.10",
+    "@react-three/drei": "^9.122.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "three": "^0.170.0"
   }
 }
