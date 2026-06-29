@@ -9,6 +9,9 @@
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint src",
-    "test": "echo \"(no tests yet)\""
+    "test": "node --test dist/test/catalog.test.js"
+  },
+  "dependencies": {
+    "zod": "^3.23"
   }
 }

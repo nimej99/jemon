@@ -1,0 +1,51 @@
+import type { CatalogEntry } from '../schema.js';
+
+export const serverEntries: CatalogEntry[] = [
+  {
+    key: 'srv.hrProcessorLoad',
+    domain: 'server',
+    title: 'CPU Utilization',
+    unit: '%',
+    source: { kind: 'snmp', oid: '1.3.6.1.2.1.25.3.3.1.2' },
+    agg: 'avg',
+    kpi: { expr: 'hrProcessorLoad > 0', warn: 80, crit: 90 },
+    panel: 'gauge',
+  },
+  {
+    key: 'srv.hrStorageUsed',
+    domain: 'server',
+    title: 'Disk Storage Used',
+    unit: 'KB',
+    source: { kind: 'snmp', oid: '1.3.6.1.2.1.25.2.3.1.6' },
+    agg: 'last',
+    kpi: { expr: 'hrStorageUsed / hrStorageSize * 100', warn: 80, crit: 95 },
+    panel: 'gauge',
+  },
+  {
+    key: 'srv.hrStorageSize',
+    domain: 'server',
+    title: 'Disk Storage Total',
+    unit: 'KB',
+    source: { kind: 'snmp', oid: '1.3.6.1.2.1.25.2.3.1.5' },
+    agg: 'last',
+    panel: 'stat',
+  },
+  {
+    key: 'srv.hrMemorySize',
+    domain: 'server',
+    title: 'Total Physical Memory',
+    unit: 'KB',
+    source: { kind: 'snmp', oid: '1.3.6.1.2.1.25.2.2.0' },
+    agg: 'last',
+    panel: 'stat',
+  },
+  {
+    key: 'srv.sysUpTime',
+    domain: 'server',
+    title: 'Server Uptime',
+    unit: 'timeticks',
+    source: { kind: 'snmp', oid: '1.3.6.1.2.1.1.3.0' },
+    agg: 'last',
+    panel: 'stat',
+  },
+];

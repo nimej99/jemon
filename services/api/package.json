@@ -7,8 +7,17 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "test": "node --experimental-strip-types --test test/api.test.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "lint": "eslint src",
-    "test": "echo \"(no tests yet)\""
+    "lint": "eslint src"
+  },
+  "dependencies": {
+    "@jemon/catalog": "workspace:*",
+    "fastify": "^5.0.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0"
   }
 }
