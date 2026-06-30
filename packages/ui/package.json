@@ -16,6 +16,11 @@
       "types": "./dist/scenes/index.d.ts",
       "import": "./dist/scenes/index.js",
       "default": "./dist/scenes/index.js"
+    },
+    "./rack": {
+      "types": "./dist/rack/index.d.ts",
+      "import": "./dist/rack/index.js",
+      "default": "./dist/rack/index.js"
     }
   },
   "scripts": {

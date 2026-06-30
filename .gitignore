@@ -13,3 +13,4 @@ playwright-report
 test-results
 artifacts/
 services/api/data/devices.json
+*.tsbuildinfo
