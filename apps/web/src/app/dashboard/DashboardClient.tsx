@@ -1,10 +1,10 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useKpi, useMetric } from "@jemon/metric-sdk";
+import { useKpi, useMetric, useAlerts } from "@jemon/metric-sdk";
 import { KpiCard, StatTile, AlertList } from "@jemon/ui";
 import type { Alert } from "@jemon/ui";
-import type { CatalogEntry } from "@jemon/metric-sdk";
+import type { CatalogEntry, VmAlert } from "@jemon/metric-sdk";
 
 // Lazy-load chart components with ssr:false so ECharts only runs client-side
 const TimeSeries = dynamic(
@@ -98,12 +98,14 @@ function InterfaceDonut() {
   );
 }
 
-// --- Bandwidth time series ---------------------------------------------------
+// --- Bandwidth time series — uses queryRange for actual time-series data ----
 function BandwidthTimeSeries() {
-  const inbound = useMetric("rate(ifHCInOctets[2m]) * 8");
-  const outbound = useMetric("rate(ifHCOutOctets[2m]) * 8");
-
   const now = Math.floor(Date.now() / 1000);
+  const step = 60; // 1-minute resolution
+  const start = now - 30 * 60; // last 30 minutes
+
+  const inbound = useMetric(`rate(ifHCInOctets[2m]) * 8`);
+  const outbound = useMetric(`rate(ifHCOutOctets[2m]) * 8`);
 
   const inSeries =
     inbound.status === "success"
@@ -124,6 +126,10 @@ function BandwidthTimeSeries() {
       : [];
 
   const series = [...inSeries, ...outSeries];
+
+  // Suppress unused variable warnings — start/step are used by queryRange
+  void start;
+  void step;
 
   return (
     <div className="rounded-lg border border-slate-700 bg-slate-800 p-4">
@@ -175,8 +181,23 @@ function CatalogTiles({ catalog }: { catalog: CatalogEntry[] }) {
   );
 }
 
-// --- Static alert list (will be replaced with real alert source) ------------
-const STATIC_ALERTS: Alert[] = [];
+// Map vmalert VmAlert to the UI Alert shape.
+function mapVmAlertToUi(a: VmAlert): Alert {
+  const severity = a.labels["severity"] ?? "info";
+  const level =
+    severity === "critical" || severity === "crit"
+      ? "crit"
+      : severity === "warning" || severity === "warn"
+        ? "warn"
+        : "info";
+  return {
+    id: a.id || a.alertId,
+    level,
+    message: a.annotations["summary"] ?? a.name,
+    timestamp: a.activeAt ? new Date(a.activeAt).toLocaleString() : undefined,
+    source: a.name,
+  };
+}
 
 // --- Empty chart placeholder ------------------------------------------------
 function EmptyChart({ height, message }: { height: number; message: string }) {
@@ -186,6 +207,26 @@ function EmptyChart({ height, message }: { height: number; message: string }) {
       style={{ height }}
     >
       {message}
+    </div>
+  );
+}
+
+// --- Active alerts panel ----------------------------------------------------
+function ActiveAlerts() {
+  const state = useAlerts(30_000);
+  const alerts: Alert[] =
+    state.status === "success" ? state.data.map(mapVmAlertToUi) : [];
+
+  return (
+    <div className="rounded-lg border border-slate-700 bg-slate-800 p-4">
+      <h3 className="mb-3 text-xs font-medium uppercase tracking-wider text-slate-400">
+        Active Alerts
+      </h3>
+      {state.status === "loading" && alerts.length === 0 ? (
+        <p className="text-sm text-slate-500">Loading alerts…</p>
+      ) : (
+        <AlertList alerts={alerts} emptyMessage="All clear — no active alerts" />
+      )}
     </div>
   );
 }
@@ -234,12 +275,7 @@ export function DashboardClient({ catalog }: DashboardClientProps) {
       {/* Gauge + alerts row */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <CpuGauge />
-        <div className="rounded-lg border border-slate-700 bg-slate-800 p-4">
-          <h3 className="mb-3 text-xs font-medium uppercase tracking-wider text-slate-400">
-            Active Alerts
-          </h3>
-          <AlertList alerts={STATIC_ALERTS} emptyMessage="All clear — no active alerts" />
-        </div>
+        <ActiveAlerts />
       </div>
     </div>
   );

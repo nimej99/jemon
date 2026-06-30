@@ -118,3 +118,42 @@ test('GET /metrics/query returns 502 when VM is unreachable', async () => {
   const body = res.json() as { error: string };
   assert.ok(body.error, 'expected error field in 502 response');
 });
+
+test('GET /metrics/query_range returns 400 on missing params', async () => {
+  const res = await app.inject({
+    method: 'GET',
+    url: '/metrics/query_range',
+  });
+  assert.strictEqual(res.statusCode, 400);
+  const body = res.json() as { error: string };
+  assert.ok(body.error, 'expected error field in 400 response');
+});
+
+test('GET /metrics/query_range returns 400 on invalid step', async () => {
+  const res = await app.inject({
+    method: 'GET',
+    url: '/metrics/query_range?query=up&start=0&end=3600&step=-1',
+  });
+  assert.strictEqual(res.statusCode, 400);
+  const body = res.json() as { error: string };
+  assert.ok(body.error, 'expected error field for non-positive step');
+});
+
+test('GET /metrics/query_range returns 502 when VM is unreachable', async () => {
+  const res = await app.inject({
+    method: 'GET',
+    url: '/metrics/query_range?query=up&start=0&end=3600&step=60',
+  });
+  assert.strictEqual(res.statusCode, 502);
+  const body = res.json() as { error: string };
+  assert.ok(body.error, 'expected error field in 502 response');
+});
+
+test('GET /alerts returns graceful empty response when vmalert is unreachable', async () => {
+  const res = await app.inject({ method: 'GET', url: '/alerts' });
+  // Graceful fallback: always 200 with empty alerts array
+  assert.strictEqual(res.statusCode, 200);
+  const body = res.json() as { data: { alerts: unknown[] } };
+  assert.ok(Array.isArray(body.data.alerts), 'expected data.alerts to be an array');
+  assert.strictEqual(body.data.alerts.length, 0, 'expected empty alerts on vmalert failure');
+});

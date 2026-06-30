@@ -1,7 +1,7 @@
 import Fastify from 'fastify';
 import { z } from 'zod';
 import { fileURLToPath } from 'node:url';
-import { VM_URL, PORT } from './config.js';
+import { VM_URL, VMALERT_URL, PORT } from './config.js';
 import { addDevice, getDevices, loadStore } from './store.js';
 import { getByDomain, loadCatalog } from '@jemon/catalog';
 
@@ -41,6 +41,13 @@ const DeviceSchema = z.object({
   }),
 });
 
+const QueryRangeParamsSchema = z.object({
+  query: z.string().min(1),
+  start: z.coerce.number(),
+  end: z.coerce.number(),
+  step: z.coerce.number().positive(),
+});
+
 export async function buildApp() {
   const app = Fastify({ logger: false });
 
@@ -61,6 +68,40 @@ export async function buildApp() {
       return reply.status(upstream.status).send(body);
     } catch {
       return reply.status(502).send({ error: 'upstream unavailable' });
+    }
+  });
+
+  app.get('/metrics/query_range', async (req, reply) => {
+    const r = QueryRangeParamsSchema.safeParse(req.query);
+    if (!r.success) {
+      return reply.status(400).send({ error: r.error.message });
+    }
+    const { query, start, end, step } = r.data;
+    try {
+      const params = new URLSearchParams({
+        query,
+        start: String(start),
+        end: String(end),
+        step: String(step),
+      });
+      const upstream = await fetch(
+        `${VM_URL}/api/v1/query_range?${params.toString()}`,
+      );
+      const body = (await upstream.json()) as unknown;
+      return reply.status(upstream.status).send(body);
+    } catch {
+      return reply.status(502).send({ error: 'upstream unavailable' });
+    }
+  });
+
+  app.get('/alerts', async (_req, reply) => {
+    try {
+      const upstream = await fetch(`${VMALERT_URL}/api/v1/alerts`);
+      const body = (await upstream.json()) as unknown;
+      return reply.status(upstream.status).send(body);
+    } catch {
+      // vmalert may not be running in all environments; degrade gracefully.
+      return reply.send({ data: { alerts: [] } });
     }
   });
 

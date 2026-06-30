@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
-import { queryInstant } from "./client.js";
+import { queryInstant, getAlerts } from "./client.js";
 import type { MetricState, InstantResult } from "./types.js";
+import type { VmAlert, QueryOptions } from "./client.js";
 
 /**
  * React hook — polls a PromQL instant query on a fixed interval.
@@ -79,4 +80,38 @@ export function useKpi(
   }
 
   return { value, warn, crit, level };
+}
+
+/**
+ * React hook — polls active alerts from the API on a fixed interval.
+ * Degrades to an empty array when the upstream is unreachable.
+ *
+ * @param intervalMs  refresh interval (default 30 s)
+ * @param opts        optional QueryOptions (baseUrl override)
+ */
+export function useAlerts(
+  intervalMs = 30_000,
+  opts?: QueryOptions,
+): MetricState<VmAlert[]> {
+  const [state, setState] = useState<MetricState<VmAlert[]>>({
+    status: "idle",
+  });
+
+  const run = useCallback(async () => {
+    setState({ status: "loading" });
+    try {
+      const alerts = await getAlerts(opts);
+      setState({ status: "success", data: alerts });
+    } catch (err) {
+      setState({ status: "error", error: String(err) });
+    }
+  }, [opts]);
+
+  useEffect(() => {
+    void run();
+    const id = setInterval(() => void run(), intervalMs);
+    return () => clearInterval(id);
+  }, [run, intervalMs]);
+
+  return state;
 }
