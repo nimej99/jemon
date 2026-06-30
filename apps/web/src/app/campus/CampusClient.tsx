@@ -2,6 +2,8 @@
 
 import dynamic from "next/dynamic";
 import type { BuildingData } from "@jemon/ui/scenes";
+import { AuthGate } from "../_lib/auth";
+import { UserNav } from "../_components/UserNav";
 
 const CampusScene = dynamic(
   () => import("@jemon/ui/scenes").then((m) => m.CampusScene),
@@ -24,17 +26,22 @@ const buildings: BuildingData[] = [
 
 export function CampusClient() {
   return (
-    <div className="min-h-screen bg-slate-900 p-6">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold text-slate-100">Campus Topology — 3-D</h1>
-          <p className="text-sm text-slate-500">건물별 CPU / 메모리 / 트래픽 / 온도 현황</p>
+    <AuthGate>
+      <div className="min-h-screen bg-slate-900 p-6">
+        {/* User navigation */}
+        <UserNav />
+
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-bold text-slate-100">Campus Topology — 3-D</h1>
+            <p className="text-sm text-slate-500">건물별 CPU / 메모리 / 트래픽 / 온도 현황</p>
+          </div>
+          <a href="/dashboard" className="rounded-md border border-slate-700 bg-slate-800 px-3 py-1 text-xs text-slate-300 hover:bg-slate-700">← Dashboard</a>
         </div>
-        <a href="/dashboard" className="rounded-md border border-slate-700 bg-slate-800 px-3 py-1 text-xs text-slate-300 hover:bg-slate-700">← Dashboard</a>
+        <div className="rounded-lg border border-slate-700 bg-slate-800/60 p-4">
+          <CampusScene buildings={buildings} width={1000} height={640} />
+        </div>
       </div>
-      <div className="rounded-lg border border-slate-700 bg-slate-800/60 p-4">
-        <CampusScene buildings={buildings} width={1000} height={640} />
-      </div>
-    </div>
+    </AuthGate>
   );
 }

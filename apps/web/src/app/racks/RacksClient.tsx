@@ -2,6 +2,8 @@
 
 import { RackElevation } from "@jemon/ui/rack";
 import type { RackUnit } from "@jemon/ui/rack";
+import { AuthGate } from "../_lib/auth";
+import { UserNav } from "../_components/UserNav";
 
 const rackA: RackUnit[] = [
   { id: "a-patch",   name: "Patch Panel",   startU: 42, sizeU: 1, status: "ok"   },
@@ -34,65 +36,70 @@ const rackC: RackUnit[] = [
 
 export function RacksClient() {
   return (
-    <div className="min-h-screen bg-slate-900 p-6">
-      {/* ── Header ── */}
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold text-slate-100">
-            Rack Elevation — 실장도
-          </h1>
-          <p className="text-sm text-slate-500">
-            데이터센터 랙 실장 현황 · 상태 색상: 녹=정상 · 황=경고 · 적=장애
-          </p>
-        </div>
-        <a
-          href="/dashboard"
-          className="rounded-md border border-slate-700 bg-slate-800 px-3 py-1 text-xs text-slate-300 hover:bg-slate-700"
-        >
-          ← Dashboard
-        </a>
-      </div>
+    <AuthGate>
+      <div className="min-h-screen bg-slate-900 p-6">
+        {/* User navigation */}
+        <UserNav />
 
-      {/* ── Legend ── */}
-      <div className="mb-6 flex flex-wrap gap-4">
-        {(
-          [
-            { color: "#16a34a", label: "정상 (ok)" },
-            { color: "#f59e0b", label: "경고 (warn)" },
-            { color: "#ef4444", label: "장애 (crit)" },
-          ] as const
-        ).map(({ color, label }) => (
-          <div key={label} className="flex items-center gap-2">
-            <span
-              style={{ backgroundColor: color }}
-              className="inline-block h-3 w-3 rounded-sm"
-            />
-            <span className="text-xs text-slate-400">{label}</span>
+        {/* ── Header ── */}
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-bold text-slate-100">
+              Rack Elevation — 실장도
+            </h1>
+            <p className="text-sm text-slate-500">
+              데이터센터 랙 실장 현황 · 상태 색상: 녹=정상 · 황=경고 · 적=장애
+            </p>
           </div>
-        ))}
-      </div>
+          <a
+            href="/dashboard"
+            className="rounded-md border border-slate-700 bg-slate-800 px-3 py-1 text-xs text-slate-300 hover:bg-slate-700"
+          >
+            ← Dashboard
+          </a>
+        </div>
 
-      {/* ── Rack grid ── */}
-      <div className="flex flex-wrap gap-6">
-        <div className="flex flex-col items-center gap-2">
-          <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-            Rack A · DC-1
-          </span>
-          <RackElevation label="Rack A (DC-1)" units={rackA} />
+        {/* ── Legend ── */}
+        <div className="mb-6 flex flex-wrap gap-4">
+          {(
+            [
+              { color: "#16a34a", label: "정상 (ok)" },
+              { color: "#f59e0b", label: "경고 (warn)" },
+              { color: "#ef4444", label: "장애 (crit)" },
+            ] as const
+          ).map(({ color, label }) => (
+            <div key={label} className="flex items-center gap-2">
+              <span
+                style={{ backgroundColor: color }}
+                className="inline-block h-3 w-3 rounded-sm"
+              />
+              <span className="text-xs text-slate-400">{label}</span>
+            </div>
+          ))}
         </div>
-        <div className="flex flex-col items-center gap-2">
-          <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-            Rack B · DC-2
-          </span>
-          <RackElevation label="Rack B (DC-2)" units={rackB} />
-        </div>
-        <div className="flex flex-col items-center gap-2">
-          <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-            Rack C · DC-3
-          </span>
-          <RackElevation label="Rack C (DC-3)" units={rackC} />
+
+        {/* ── Rack grid ── */}
+        <div className="flex flex-wrap gap-6">
+          <div className="flex flex-col items-center gap-2">
+            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+              Rack A · DC-1
+            </span>
+            <RackElevation label="Rack A (DC-1)" units={rackA} />
+          </div>
+          <div className="flex flex-col items-center gap-2">
+            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+              Rack B · DC-2
+            </span>
+            <RackElevation label="Rack B (DC-2)" units={rackB} />
+          </div>
+          <div className="flex flex-col items-center gap-2">
+            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+              Rack C · DC-3
+            </span>
+            <RackElevation label="Rack C (DC-3)" units={rackC} />
+          </div>
         </div>
       </div>
-    </div>
+    </AuthGate>
   );
 }
