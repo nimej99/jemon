@@ -20,12 +20,17 @@ import { fileURLToPath } from 'node:url';
 // ---- env setup BEFORE any module from the API is imported ------------------
 // The store derives _KEY from CRED_KEY at module load time; must be set first.
 process.env['CRED_KEY'] = 'test-cred-key-for-unit-tests-0000';
+process.env['ADMIN_USER'] = 'admin';
+process.env['ADMIN_PASSWORD'] = 'admin-test-pw';
 
 // ---- clear data/devices.json so no stale encrypted-with-other-key entries ---
 const _here = dirname(fileURLToPath(import.meta.url));
 const DATA_FILE = join(_here, '..', 'services', 'api', 'data', 'devices.json');
 const _originalDevices = existsSync(DATA_FILE) ? readFileSync(DATA_FILE, 'utf8') : '[]';
 writeFileSync(DATA_FILE, '[]', 'utf8');
+const USERS_FILE = join(_here, '..', 'services', 'api', 'data', 'users.json');
+const _originalUsers = existsSync(USERS_FILE) ? readFileSync(USERS_FILE, 'utf8') : null;
+if (existsSync(USERS_FILE)) writeFileSync(USERS_FILE, '[]', 'utf8');
 
 // ---- dynamic import AFTER env is set ----------------------------------------
 const { buildApp } = (await import('../services/api/dist/index.js')) as {
@@ -35,7 +40,10 @@ const { buildApp } = (await import('../services/api/dist/index.js')) as {
 // Restore devices.json after the full test file finishes.
 process.on('exit', () => {
   try { writeFileSync(DATA_FILE, _originalDevices, 'utf8'); } catch { /* ignore */ }
+  try { if (_originalUsers !== null) writeFileSync(USERS_FILE, _originalUsers, 'utf8'); } catch { /* ignore */ }
 });
+
+let AUTHZ = '';
 
 const DOMAINS = [
   'network', 'server', 'virtualization', 'app', 'db',
@@ -132,6 +140,8 @@ describe('API e2e — /devices CRUD', () => {
     // Reset the store file to empty before this suite so we get deterministic state.
     writeFileSync(DATA_FILE, '[]', 'utf8');
     app = await buildApp();
+    const login = await app.inject({ method: 'POST', url: '/auth/login', payload: JSON.stringify({ username: 'admin', password: 'admin-test-pw' }), headers: { 'content-type': 'application/json' } });
+    AUTHZ = 'Bearer ' + (login.json() as { token: string }).token;
   });
   after(async () => { await app.close(); });
 
@@ -155,7 +165,7 @@ describe('API e2e — /devices CRUD', () => {
     const res = await app.inject({
       method: 'POST',
       url: '/devices',
-      headers: { 'content-type': 'application/json' },
+      headers: { 'content-type': 'application/json', authorization: AUTHZ },
       payload: JSON.stringify(device),
     });
     assert.equal(res.statusCode, 201);
@@ -182,7 +192,7 @@ describe('API e2e — /devices CRUD', () => {
     const res = await app.inject({
       method: 'POST',
       url: '/devices',
-      headers: { 'content-type': 'application/json' },
+      headers: { 'content-type': 'application/json', authorization: AUTHZ },
       payload: JSON.stringify(v3Device),
     });
     assert.equal(res.statusCode, 201);
@@ -237,7 +247,7 @@ describe('API e2e — /devices CRUD', () => {
     const res = await app.inject({
       method: 'POST',
       url: '/devices',
-      headers: { 'content-type': 'application/json' },
+      headers: { 'content-type': 'application/json', authorization: AUTHZ },
       payload: JSON.stringify(bad),
     });
     assert.equal(res.statusCode, 400);
@@ -248,7 +258,7 @@ describe('API e2e — /devices CRUD', () => {
     const res = await app.inject({
       method: 'POST',
       url: '/devices',
-      headers: { 'content-type': 'application/json' },
+      headers: { 'content-type': 'application/json', authorization: AUTHZ },
       payload: JSON.stringify(bad),
     });
     assert.equal(res.statusCode, 400);
@@ -259,7 +269,7 @@ describe('API e2e — /devices CRUD', () => {
     const res = await app.inject({
       method: 'POST',
       url: '/devices',
-      headers: { 'content-type': 'application/json' },
+      headers: { 'content-type': 'application/json', authorization: AUTHZ },
       payload: JSON.stringify(bad),
     });
     assert.equal(res.statusCode, 400);

@@ -33,6 +33,8 @@ spec:
           envFrom:
             - configMapRef:
                 name: {{ include "jemon.fullname" . }}-config
+            - secretRef:
+                name: {{ include "jemon.fullname" . }}-api
           resources:
             {{- toYaml .Values.api.resources | nindent 12 }}
           readinessProbe:
