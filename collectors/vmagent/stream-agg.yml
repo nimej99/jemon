@@ -1,4 +1,4 @@
-- match: "if.*"
+- match: '{__name__=~"if.+"}'
   interval: 5m
   outputs:
     - total
