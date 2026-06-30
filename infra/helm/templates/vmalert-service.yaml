@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "jemon.fullname" . }}-vmalert
+  labels:
+    {{- include "jemon.labels" . | nindent 4 }}
+    app.kubernetes.io/component: vmalert
+spec:
+  type: {{ .Values.vmalert.service.type }}
+  selector:
+    app.kubernetes.io/name: {{ include "jemon.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: vmalert
+  ports:
+    - name: http
+      port: {{ .Values.vmalert.service.port }}
+      targetPort: http
+      protocol: TCP

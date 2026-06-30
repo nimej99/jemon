@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "jemon.fullname" . }}-vmalert
+  labels:
+    {{- include "jemon.labels" . | nindent 4 }}
+    app.kubernetes.io/component: vmalert
+spec:
+  replicas: {{ .Values.vmalert.replicas }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "jemon.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: vmalert
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "jemon.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: vmalert
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/vmalert-configmap.yaml") . | sha256sum }}
+    spec:
+      containers:
+        - name: vmalert
+          image: "{{ .Values.vmalert.image }}:{{ .Values.vmalert.imageTag }}"
+          imagePullPolicy: IfNotPresent
+          args:
+            - "-datasource.url=http://{{ include "jemon.fullname" . }}-victoriametrics:{{ .Values.victoriametrics.service.port }}"
+            - "-rule=/etc/vmalert/rules.yml"
+            - "-remoteWrite.url=http://{{ include "jemon.fullname" . }}-victoriametrics:{{ .Values.victoriametrics.service.port }}/api/v1/write"
+            - "-httpListenAddr=:{{ .Values.vmalert.service.port }}"
+            - "-evaluationInterval={{ .Values.vmalert.evaluationInterval }}"
+          ports:
+            - name: http
+              containerPort: {{ .Values.vmalert.service.port }}
+              protocol: TCP
+          volumeMounts:
+            - name: vmalert-config
+              mountPath: /etc/vmalert
+              readOnly: true
+          resources:
+            {{- toYaml .Values.vmalert.resources | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 15
+      volumes:
+        - name: vmalert-config
+          configMap:
+            name: {{ include "jemon.fullname" . }}-vmalert

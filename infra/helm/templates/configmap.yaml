@@ -6,5 +6,7 @@ metadata:
     {{- include "jemon.labels" . | nindent 4 }}
 data:
   VICTORIAMETRICS_URL: "http://{{ include "jemon.fullname" . }}-victoriametrics:{{ .Values.victoriametrics.service.port }}"
+  VICTORIAMETRICS_ROLLUP_URL: "http://{{ include "jemon.fullname" . }}-vm-rollup:{{ .Values.victoriametricsRollup.service.port }}"
   VALKEY_URL: "redis://{{ include "jemon.fullname" . }}-valkey:{{ .Values.valkey.service.port }}"
   VMAGENT_SCRAPE_INTERVAL: {{ .Values.config.vmagentScrapeInterval | quote }}
+  VMALERT_URL: "http://{{ include "jemon.fullname" . }}-vmalert:{{ .Values.vmalert.service.port }}"

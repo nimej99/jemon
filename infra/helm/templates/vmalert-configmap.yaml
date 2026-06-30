@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "jemon.fullname" . }}-vmalert
+  labels:
+    {{- include "jemon.labels" . | nindent 4 }}
+    app.kubernetes.io/component: vmalert
+data:
+  rules.yml: |
+    groups:
+      - name: jemon.infra
+        interval: 1m
+        rules:
+          - alert: HighProcessorLoad
+            expr: hrProcessorLoad > 90
+            for: 2m
+            labels:
+              severity: critical
+            annotations:
+              summary: "High CPU load on {{ "{{" }} $labels.instance {{ "}}" }}"
+              description: "hrProcessorLoad is {{ "{{" }} $value {{ "}}" }}% (>90%) for more than 2 minutes."
+          - alert: TargetDown
+            expr: up == 0
+            for: 1m
+            labels:
+              severity: critical
+            annotations:
+              summary: "Target {{ "{{" }} $labels.instance {{ "}}" }} is down"
+              description: "Scrape target {{ "{{" }} $labels.job {{ "}}" }}/{{ "{{" }} $labels.instance {{ "}}" }} has been unreachable for more than 1 minute."
+          - alert: InterfaceDown
+            expr: ifOperStatus == 0
+            for: 2m
+            labels:
+              severity: warning
+            annotations:
+              summary: "Interface down on {{ "{{" }} $labels.instance {{ "}}" }}"
+              description: "Interface {{ "{{" }} $labels.ifDescr {{ "}}" }} on {{ "{{" }} $labels.instance {{ "}}" }} is operationally down."

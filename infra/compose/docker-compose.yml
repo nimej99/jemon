@@ -1,5 +1,6 @@
 name: jemon
 services:
+  ## ── Storage: raw (30 d) ──────────────────────────────────────────────────────
   victoriametrics:
     image: victoriametrics/victoria-metrics:v1.111.0
     container_name: jemon-vm
@@ -12,16 +13,83 @@ services:
     volumes:
       - vmdata:/vmdata
     restart: unless-stopped
+
+  ## ── Storage: rollup (365 d) ─────────────────────────────────────────────────
+  victoriametrics-rollup:
+    image: victoriametrics/victoria-metrics:v1.111.0
+    container_name: jemon-vm-rollup
+    command:
+      - "-storageDataPath=/vmdata"
+      - "-retentionPeriod=365d"
+      - "-httpListenAddr=:8428"
+    ports:
+      - "8429:8428"
+    volumes:
+      - vmdata-rollup:/vmdata
+    restart: unless-stopped
+
+  ## ── SNMP exporter ────────────────────────────────────────────────────────────
+  snmp-exporter:
+    image: prom/snmp-exporter:v0.26.0
+    container_name: jemon-snmp-exporter
+    # Use the image's built-in snmp.yml (do NOT mount the empty placeholder).
+    ports:
+      - "9116:9116"
+    restart: unless-stopped
+
+  ## ── Test SNMP agent ──────────────────────────────────────────────────────────
+  snmpd-test:
+    image: whyit/snmpd_test
+    container_name: jemon-snmpd-test
+    restart: unless-stopped
+
+  ## ── Valkey (cache / session) ─────────────────────────────────────────────────
   valkey:
     image: valkey/valkey:8-alpine
     container_name: jemon-valkey
     ports:
       - "6379:6379"
     restart: unless-stopped
-  snmpd-test:
-    image: whyit/snmpd_test
-    container_name: jemon-snmpd-test
+
+  ## ── vmagent (scrape → raw + rollup) ─────────────────────────────────────────
+  vmagent:
+    image: victoriametrics/vmagent:v1.111.0
+    container_name: jemon-vmagent
+    command:
+      - "-promscrape.config=/etc/vmagent/scrape.yml"
+      - "-remoteWrite.url=http://victoriametrics:8428/api/v1/write"
+      - "-remoteWrite.url=http://victoriametrics-rollup:8428/api/v1/write"
+      - "-remoteWrite.streamAggr.config=/etc/vmagent/stream-agg.yml"
+      - "-remoteWrite.streamAggr.keepInput=false"
+    volumes:
+      - ../../collectors/vmagent:/etc/vmagent:ro
+    depends_on:
+      - victoriametrics
+      - victoriametrics-rollup
+      - snmp-exporter
     restart: unless-stopped
-  # api/web 서비스는 P1/P3에서 추가
+
+  ## ── vmalert (alerting rules → raw) ──────────────────────────────────────────
+  vmalert:
+    image: victoriametrics/vmalert:v1.111.0
+    container_name: jemon-vmalert
+    command:
+      - "-datasource.url=http://victoriametrics:8428"
+      - "-rule=/etc/vmalert/rules.yml"
+      - "-remoteWrite.url=http://victoriametrics:8428/api/v1/write"
+      - "-httpListenAddr=:8880"
+      - "-evaluationInterval=1m"
+    ports:
+      - "8880:8880"
+    volumes:
+      - ../../collectors/vmalert:/etc/vmalert:ro
+    depends_on:
+      - victoriametrics
+    restart: unless-stopped
+
+  ## ── API / web (added in P1/P3) ───────────────────────────────────────────────
+  # api/web services are added in P1/P3
+
 volumes:
   vmdata:
+  vmdata-rollup:

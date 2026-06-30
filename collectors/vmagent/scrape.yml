@@ -1,2 +1,19 @@
-# vmagent scrape config (P1). P0 placeholder.
-scrape_configs: []
+scrape_configs:
+  - job_name: snmp_if_mib
+    metrics_path: /snmp
+    params:
+      auth: [public_v2]
+      module: [if_mib]
+    static_configs:
+      - targets:
+          - snmpd-test
+    relabel_configs:
+      # Pass the target hostname as the SNMP device address.
+      - source_labels: [__address__]
+        target_label: __param_target
+      # Route all scrapes through the snmp-exporter sidecar.
+      - replacement: snmp-exporter:9116
+        target_label: __address__
+      # Preserve the original target as an instance label.
+      - source_labels: [__param_target]
+        target_label: instance

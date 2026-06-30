@@ -44,7 +44,7 @@ web:
   env:
     NEXT_PUBLIC_API_URL: "http://jemon-api:3001"
 
-## ── VictoriaMetrics ──────────────────────────────────────────────────────────
+## ── VictoriaMetrics (raw — 30 d) ─────────────────────────────────────────────
 victoriametrics:
   image: victoriametrics/victoria-metrics
   imageTag: v1.111.0
@@ -62,6 +62,55 @@ victoriametrics:
     limits:
       cpu: "1000m"
       memory: "1Gi"
+
+## ── VictoriaMetrics rollup (365 d) ──────────────────────────────────────────
+victoriametricsRollup:
+  image: victoriametrics/victoria-metrics
+  imageTag: v1.111.0
+  replicas: 1
+  retention: 365d
+  storageSize: 20Gi
+  storageClass: ""   # use cluster default if empty
+  service:
+    type: ClusterIP
+    port: 8428
+  resources:
+    requests:
+      cpu: "200m"
+      memory: "256Mi"
+    limits:
+      cpu: "1000m"
+      memory: "1Gi"
+
+## ── vmagent ──────────────────────────────────────────────────────────────────
+vmagent:
+  image: victoriametrics/vmagent
+  imageTag: v1.111.0
+  replicas: 1
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+
+## ── vmalert ──────────────────────────────────────────────────────────────────
+vmalert:
+  image: victoriametrics/vmalert
+  imageTag: v1.111.0
+  replicas: 1
+  service:
+    type: ClusterIP
+    port: 8880
+  evaluationInterval: 1m
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "64Mi"
+    limits:
+      cpu: "200m"
+      memory: "256Mi"
 
 ## ── Valkey ───────────────────────────────────────────────────────────────────
 valkey:

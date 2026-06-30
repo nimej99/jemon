@@ -1,9 +1,22 @@
 import { after, before, test } from 'node:test';
 import assert from 'node:assert/strict';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { generateScrapeTargets } from '../dist/configgen.js';
 
 // Must be set before the app module is loaded so config.ts picks it up.
 process.env['CRED_KEY'] = 'test-cred-key-for-unit-tests-0000';
+
+// ── Clear any stale device data so decryption never fails ────────────────────
+// (Mirrors the guard in tests/api.e2e.ts)
+const _here = dirname(fileURLToPath(import.meta.url));
+const DATA_FILE = join(_here, '..', 'data', 'devices.json');
+const _originalDevices = existsSync(DATA_FILE) ? readFileSync(DATA_FILE, 'utf8') : '[]';
+writeFileSync(DATA_FILE, '[]', 'utf8');
+process.on('exit', () => {
+  try { writeFileSync(DATA_FILE, _originalDevices, 'utf8'); } catch { /* ignore */ }
+});
 
 // Dynamic import after env is configured.
 const { buildApp } = (await import('../dist/index.js')) as {
@@ -63,7 +76,7 @@ test('POST /devices then GET /devices masks credentials', async () => {
   assert.strictEqual(found.snmp.community, '***', 'community must be masked');
 });
 
-test('configgen generates vmagent scrape targets', () => {
+test('configgen generates vmagent scrape targets (bare IP, snmp-exporter relabel pattern)', () => {
   const devices = [
     {
       id: 'd1',
@@ -82,10 +95,18 @@ test('configgen generates vmagent scrape targets', () => {
   ];
   const targets = generateScrapeTargets(devices);
   assert.strictEqual(targets.length, 2);
-  assert.deepStrictEqual(targets[0]!.targets, ['10.0.0.1:161']);
-  assert.deepStrictEqual(targets[1]!.targets, ['10.0.0.2:161']);
+  // Targets are bare IPs — relabel_configs in the scrape job route them
+  // through snmp-exporter:9116 and set __param_target accordingly.
+  assert.deepStrictEqual(targets[0]!.targets, ['10.0.0.1']);
+  assert.deepStrictEqual(targets[1]!.targets, ['10.0.0.2']);
   assert.strictEqual(targets[0]!.labels['snmp_version'], 'v2c');
   assert.strictEqual(targets[1]!.labels['snmp_version'], 'v3');
+});
+
+test('configgen empty inventory emits empty YAML array marker', () => {
+  const targets = generateScrapeTargets([]);
+  assert.strictEqual(targets.length, 0);
+  assert.deepStrictEqual(targets, []);
 });
 
 test('GET /metrics/query returns 502 when VM is unreachable', async () => {
