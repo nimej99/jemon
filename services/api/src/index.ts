@@ -4,6 +4,8 @@ import { z } from 'zod';
 import { fileURLToPath } from 'node:url';
 import { VM_URL, VMALERT_URL, PORT } from './config.js';
 import { addDevice, getDevices, loadStore } from './store.js';
+import { loadUsers } from './users.js';
+import { registerAuth } from './auth.js';
 import { getByDomain, loadCatalog } from '@jemon/catalog';
 
 // Local domain enum for query-param validation (mirrors catalog contract).
@@ -53,7 +55,17 @@ export async function buildApp() {
   const app = Fastify({ logger: false });
   await app.register(cors, { origin: true });
 
+  // Register JWT auth plugin + decorators + /auth/* routes.
+  // Must run before routes that reference app.authenticate / app.requireRole.
+  await registerAuth(app);
+
   await loadStore();
+  await loadUsers();
+
+  // ── Public routes ────────────────────────────────────────────────────────────
+  // /healthz, /auth/*, /metrics/*, /catalog, GET /devices are intentionally
+  // public so that @jemon/metric-sdk and external dashboards keep working
+  // without authentication. Only mutations are gated.
 
   app.get('/healthz', async () => ({ status: 'ok' }));
 
@@ -119,16 +131,24 @@ export async function buildApp() {
     return reply.send(loadCatalog());
   });
 
+  // GET /devices — public (read-only; no credentials returned)
   app.get('/devices', async () => getDevices());
 
-  app.post('/devices', async (req, reply) => {
-    const r = DeviceSchema.safeParse(req.body);
-    if (!r.success) {
-      return reply.status(400).send({ error: r.error.message });
-    }
-    await addDevice(r.data);
-    return reply.status(201).send({ id: r.data.id });
-  });
+  // ── Gated mutations ──────────────────────────────────────────────────────────
+  // POST /devices requires admin or operator role.
+
+  app.post(
+    '/devices',
+    { preHandler: app.requireRole('admin', 'operator') },
+    async (req, reply) => {
+      const r = DeviceSchema.safeParse(req.body);
+      if (!r.success) {
+        return reply.status(400).send({ error: r.error.message });
+      }
+      await addDevice(r.data);
+      return reply.status(201).send({ id: r.data.id });
+    },
+  );
 
   return app;
 }

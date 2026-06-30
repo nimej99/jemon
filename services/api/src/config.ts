@@ -25,3 +25,43 @@ export const CRED_KEY: string =
   rawKey && rawKey.length >= 16
     ? rawKey
     : 'dev-insecure-key-change-in-prod!!';
+
+// ── Auth ─────────────────────────────────────────────────────────────────────
+/** JWT signing secret. Falls back to CRED_KEY if AUTH_SECRET is unset. */
+const rawAuthSecret = process.env['AUTH_SECRET'] ?? process.env['CRED_KEY'];
+const rawAdminPassword = process.env['ADMIN_PASSWORD'];
+
+if (!rawAuthSecret || rawAuthSecret.length < 16) {
+  if (DEV) {
+    console.warn(
+      '[config] AUTH_SECRET is unset or too short — using insecure dev default. ' +
+        'Set AUTH_SECRET (≥16 chars) before deploying.',
+    );
+  } else {
+    throw new Error(
+      'AUTH_SECRET must be set to a string of at least 16 characters. ' +
+        'Set the AUTH_SECRET environment variable before starting the server.',
+    );
+  }
+}
+
+if (!rawAdminPassword) {
+  if (DEV) {
+    console.warn(
+      '[config] ADMIN_PASSWORD is unset — using dev default "admin1234". ' +
+        'Set ADMIN_PASSWORD before deploying.',
+    );
+  } else {
+    throw new Error(
+      'ADMIN_PASSWORD must be set in non-development environments. ' +
+        'Set the ADMIN_PASSWORD environment variable before starting the server.',
+    );
+  }
+}
+
+export const AUTH_SECRET: string =
+  rawAuthSecret && rawAuthSecret.length >= 16
+    ? rawAuthSecret
+    : 'dev-insecure-jwt-secret-change!!';
+export const ADMIN_USER: string = process.env['ADMIN_USER'] ?? 'admin';
+export const ADMIN_PASSWORD: string = rawAdminPassword ?? 'admin1234';

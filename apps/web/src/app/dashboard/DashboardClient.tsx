@@ -6,6 +6,8 @@ import { useKpi, useMetric, useAlerts } from "@jemon/metric-sdk";
 import { KpiCard, StatTile, AlertList } from "@jemon/ui";
 import type { Alert } from "@jemon/ui";
 import type { CatalogEntry, VmAlert } from "@jemon/metric-sdk";
+import { AuthGate } from "../_lib/auth";
+import { UserNav } from "../_components/UserNav";
 
 // Lazy-load chart components with ssr:false so ECharts only runs client-side
 const TimeSeries = dynamic(
@@ -247,57 +249,62 @@ function HeaderClock() {
 // --- Main dashboard ---------------------------------------------------------
 export function DashboardClient({ catalog }: DashboardClientProps) {
   return (
-    <div className="min-h-screen bg-slate-900 p-6">
-      {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold text-slate-100">
-            Network &amp; Server Dashboard
-          </h1>
-          <p className="text-sm text-slate-500">
-            Live metrics — refreshes every 30 s
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <a
-            href="/campus"
-            className="rounded-md border border-sky-700 bg-sky-900/40 px-3 py-1 text-xs text-sky-200 hover:bg-sky-800/60"
-          >
-            3-D Campus →
-          </a>
-          <div className="rounded-md border border-slate-700 bg-slate-800 px-3 py-1 text-xs text-slate-400">
-            <HeaderClock />
+    <AuthGate>
+      <div className="min-h-screen bg-slate-900 p-6">
+        {/* User navigation */}
+        <UserNav />
+
+        {/* Header */}
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-bold text-slate-100">
+              Network &amp; Server Dashboard
+            </h1>
+            <p className="text-sm text-slate-500">
+              Live metrics — refreshes every 30 s
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <a
+              href="/campus"
+              className="rounded-md border border-sky-700 bg-sky-900/40 px-3 py-1 text-xs text-sky-200 hover:bg-sky-800/60"
+            >
+              3-D Campus →
+            </a>
+            <div className="rounded-md border border-slate-700 bg-slate-800 px-3 py-1 text-xs text-slate-400">
+              <HeaderClock />
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Catalog stats */}
-      {catalog.length > 0 && (
-        <div className="mb-6 rounded-lg border border-slate-700 bg-slate-800/60 px-5 py-3">
-          <CatalogTiles catalog={catalog} />
+        {/* Catalog stats */}
+        {catalog.length > 0 && (
+          <div className="mb-6 rounded-lg border border-slate-700 bg-slate-800/60 px-5 py-3">
+            <CatalogTiles catalog={catalog} />
+          </div>
+        )}
+
+        {/* KPI row */}
+        <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <CpuKpi />
+          <BandwidthKpi />
+          <ErrorKpi />
         </div>
-      )}
 
-      {/* KPI row */}
-      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <CpuKpi />
-        <BandwidthKpi />
-        <ErrorKpi />
-      </div>
-
-      {/* Charts row */}
-      <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <BandwidthTimeSeries />
+        {/* Charts row */}
+        <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <div className="lg:col-span-2">
+            <BandwidthTimeSeries />
+          </div>
+          <InterfaceDonut />
         </div>
-        <InterfaceDonut />
-      </div>
 
-      {/* Gauge + alerts row */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <CpuGauge />
-        <ActiveAlerts />
+        {/* Gauge + alerts row */}
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <CpuGauge />
+          <ActiveAlerts />
+        </div>
       </div>
-    </div>
+    </AuthGate>
   );
 }
