@@ -34,69 +34,68 @@ const rackC: RackUnit[] = [
   { id: "c-ups",      name: "UPS",           startU:  1, sizeU: 2, status: "ok"  },
 ];
 
+const STATUS_LEGEND = [
+  { color: "#22c55e", label: "정상 (ok)" },
+  { color: "#f59e0b", label: "경고 (warn)" },
+  { color: "#ef4444", label: "장애 (crit)" },
+] as const;
+
+const RACKS = [
+  { label: "Rack A", sub: "DC-1", units: rackA },
+  { label: "Rack B", sub: "DC-2", units: rackB },
+  { label: "Rack C", sub: "DC-3", units: rackC },
+] as const;
+
 export function RacksClient() {
   return (
     <AuthGate>
       <div className="min-h-screen bg-slate-900 p-6">
-        {/* User navigation */}
-        <UserNav />
+        {/* Unified nav bar */}
+        <UserNav activePage="racks" />
 
-        {/* ── Header ── */}
+        {/* ── Page header ── */}
         <div className="mb-6 flex items-center justify-between">
           <div>
             <h1 className="text-xl font-bold text-slate-100">
               Rack Elevation — 실장도
             </h1>
-            <p className="text-sm text-slate-500">
-              데이터센터 랙 실장 현황 · 상태 색상: 녹=정상 · 황=경고 · 적=장애
+            <p className="mt-0.5 text-xs text-slate-500">
+              데이터센터 랙 실장 현황
             </p>
           </div>
-          <a
-            href="/dashboard"
-            className="rounded-md border border-slate-700 bg-slate-800 px-3 py-1 text-xs text-slate-300 hover:bg-slate-700"
-          >
-            ← Dashboard
-          </a>
-        </div>
-
-        {/* ── Legend ── */}
-        <div className="mb-6 flex flex-wrap gap-4">
-          {(
-            [
-              { color: "#16a34a", label: "정상 (ok)" },
-              { color: "#f59e0b", label: "경고 (warn)" },
-              { color: "#ef4444", label: "장애 (crit)" },
-            ] as const
-          ).map(({ color, label }) => (
-            <div key={label} className="flex items-center gap-2">
-              <span
-                style={{ backgroundColor: color }}
-                className="inline-block h-3 w-3 rounded-sm"
-              />
-              <span className="text-xs text-slate-400">{label}</span>
-            </div>
-          ))}
+          {/* Status legend */}
+          <div className="flex items-center gap-4">
+            {STATUS_LEGEND.map(({ color, label }) => (
+              <div key={label} className="flex items-center gap-1.5">
+                <span
+                  className="inline-block h-2.5 w-2.5 rounded-sm"
+                  style={{ backgroundColor: color }}
+                />
+                <span className="text-[11px] text-slate-400">{label}</span>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* ── Rack grid ── */}
-        <div className="flex flex-wrap gap-6">
-          <div className="flex flex-col items-center gap-2">
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-              Rack A · DC-1
-            </span>
-            <RackElevation label="Rack A (DC-1)" units={rackA} />
+        <div className="overflow-hidden rounded-lg border border-slate-700/80 bg-slate-800/70 shadow-sm">
+          <div className="border-b border-slate-700/60 px-4 py-2">
+            <h3 className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+              Live Rack View
+            </h3>
           </div>
-          <div className="flex flex-col items-center gap-2">
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-              Rack B · DC-2
-            </span>
-            <RackElevation label="Rack B (DC-2)" units={rackB} />
-          </div>
-          <div className="flex flex-col items-center gap-2">
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-              Rack C · DC-3
-            </span>
-            <RackElevation label="Rack C (DC-3)" units={rackC} />
+          <div className="flex flex-wrap gap-8 p-6">
+            {RACKS.map(({ label, sub, units }) => (
+              <div key={label} className="flex flex-col items-center gap-2">
+                <div className="text-center">
+                  <span className="block text-xs font-semibold uppercase tracking-wider text-slate-300">
+                    {label}
+                  </span>
+                  <span className="text-[10px] text-slate-500">{sub}</span>
+                </div>
+                <RackElevation label={`${label} (${sub})`} units={units} />
+              </div>
+            ))}
           </div>
         </div>
       </div>
