@@ -1,0 +1,25 @@
+# jemon Alertmanager config. vmalert pushes firing alerts here (replaces blackhole).
+# Operator: enable one of the integrations under the 'default' receiver for real delivery.
+global:
+  resolve_timeout: 5m
+
+route:
+  receiver: default
+  group_by: ['alertname', 'instance']
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+
+receivers:
+  - name: default
+    # --- Email (fill in and uncomment) ---
+    # email_configs:
+    #   - to: noc@example.com
+    #     from: jemon-alerts@example.com
+    #     smarthost: smtp.example.com:587
+    #     auth_username: jemon-alerts@example.com
+    #     auth_password: CHANGEME
+    # --- Webhook to jemon API (fill in and uncomment) ---
+    # webhook_configs:
+    #   - url: http://host.docker.internal:8080/internal/alerts/webhook
+    #     send_resolved: true

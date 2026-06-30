@@ -17,3 +17,19 @@ scrape_configs:
       # Preserve the original target as an instance label.
       - source_labels: [__param_target]
         target_label: instance
+
+  - job_name: snmp_host_mib
+    metrics_path: /snmp
+    params:
+      auth: [public_v2]
+      module: [host_resources]
+    static_configs:
+      - targets:
+          - snmpd-test
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - replacement: snmp-exporter-host:9116
+        target_label: __address__
+      - source_labels: [__param_target]
+        target_label: instance
