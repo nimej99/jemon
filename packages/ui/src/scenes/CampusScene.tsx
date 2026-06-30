@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { OrthographicCamera, Grid, Stars } from '@react-three/drei';
+import { OrthographicCamera, Grid, Stars, OrbitControls } from '@react-three/drei';
 import { BuildingBlock } from './BuildingBlock.js';
 import type { CampusSceneProps } from './types.js';
 
@@ -21,10 +21,12 @@ function SceneGraph({ buildings }: SceneGraphProps) {
       <OrthographicCamera
         makeDefault
         position={[12, 12, 12]}
-        zoom={52}
+        zoom={34}
         near={0.1}
         far={400}
+        onUpdate={(self) => self.lookAt(0, 0, 0)}
       />
+      <OrbitControls makeDefault target={[0, 0, 0]} />
 
       {/* ── lighting ── */}
       <ambientLight intensity={0.35} color="#1e3a8a" />
@@ -120,7 +122,7 @@ export function CampusScene({
       }}
     >
       <Canvas
-        frameloop="demand"
+        frameloop="always"
         shadows
         gl={{ antialias: true, alpha: false }}
         style={{ width: '100%', height: '100%' }}

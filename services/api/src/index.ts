@@ -1,4 +1,5 @@
 import Fastify from 'fastify';
+import cors from '@fastify/cors';
 import { z } from 'zod';
 import { fileURLToPath } from 'node:url';
 import { VM_URL, VMALERT_URL, PORT } from './config.js';
@@ -50,6 +51,7 @@ const QueryRangeParamsSchema = z.object({
 
 export async function buildApp() {
   const app = Fastify({ logger: false });
+  await app.register(cors, { origin: true });
 
   await loadStore();
 

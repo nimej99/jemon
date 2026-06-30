@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { useEffect, useState } from "react";
 import { useKpi, useMetric, useAlerts } from "@jemon/metric-sdk";
 import { KpiCard, StatTile, AlertList } from "@jemon/ui";
 import type { Alert } from "@jemon/ui";
@@ -231,6 +232,18 @@ function ActiveAlerts() {
   );
 }
 
+// --- Live header clock (client-only: avoids SSR locale hydration mismatch) -
+function HeaderClock() {
+  const [now, setNow] = useState("");
+  useEffect(() => {
+    const tick = () => setNow(new Date().toLocaleString());
+    tick();
+    const id = setInterval(tick, 30_000);
+    return () => clearInterval(id);
+  }, []);
+  return <span suppressHydrationWarning>{now}</span>;
+}
+
 // --- Main dashboard ---------------------------------------------------------
 export function DashboardClient({ catalog }: DashboardClientProps) {
   return (
@@ -245,8 +258,16 @@ export function DashboardClient({ catalog }: DashboardClientProps) {
             Live metrics — refreshes every 30 s
           </p>
         </div>
-        <div className="rounded-md border border-slate-700 bg-slate-800 px-3 py-1 text-xs text-slate-400">
-          {new Date().toLocaleString()}
+        <div className="flex items-center gap-3">
+          <a
+            href="/campus"
+            className="rounded-md border border-sky-700 bg-sky-900/40 px-3 py-1 text-xs text-sky-200 hover:bg-sky-800/60"
+          >
+            3-D Campus →
+          </a>
+          <div className="rounded-md border border-slate-700 bg-slate-800 px-3 py-1 text-xs text-slate-400">
+            <HeaderClock />
+          </div>
         </div>
       </div>
 
