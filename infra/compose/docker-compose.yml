@@ -38,6 +38,18 @@ services:
     restart: unless-stopped
 
   ## ── Test SNMP agent ──────────────────────────────────────────────────────────
+  ## ── SNMP exporter: host-resources (server CPU/mem/disk) ────────────────
+  snmp-exporter-host:
+    image: prom/snmp-exporter:v0.26.0
+    container_name: jemon-snmp-exporter-host
+    command:
+      - "--config.file=/etc/snmp_exporter/snmp.yml"
+    volumes:
+      - ../../collectors/snmp_exporter/snmp-host.yml:/etc/snmp_exporter/snmp.yml:ro
+    ports:
+      - "9117:9116"
+    restart: unless-stopped
+
   snmpd-test:
     image: whyit/snmpd_test
     container_name: jemon-snmpd-test
@@ -76,7 +88,7 @@ services:
     command:
       - "-datasource.url=http://victoriametrics:8428"
       - "-rule=/etc/vmalert/rules.yml"
-      - "-notifier.blackhole"
+      - "-notifier.url=http://alertmanager:9093"
       - "-remoteWrite.url=http://victoriametrics:8428/api/v1/write"
       - "-httpListenAddr=:8880"
       - "-evaluationInterval=1m"
@@ -86,6 +98,21 @@ services:
       - ../../collectors/vmalert:/etc/vmalert:ro
     depends_on:
       - victoriametrics
+      - alertmanager
+    restart: unless-stopped
+
+  ## ── Alertmanager (alert delivery) ───────────────────────────────
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    container_name: jemon-alertmanager
+    command:
+      - "--config.file=/etc/alertmanager/config.yml"
+      - "--storage.path=/alertmanager"
+    volumes:
+      - ../../collectors/alertmanager:/etc/alertmanager:ro
+      - alertmanager-data:/alertmanager
+    ports:
+      - "9093:9093"
     restart: unless-stopped
 
   ## ── API / web (added in P1/P3) ───────────────────────────────────────────────
@@ -94,3 +121,4 @@ services:
 volumes:
   vmdata:
   vmdata-rollup:
+  alertmanager-data:
