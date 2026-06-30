@@ -131,3 +131,19 @@ valkey:
 ## ── Global config map data ───────────────────────────────────────────────────
 config:
   vmagentScrapeInterval: 30s
+
+## ── Alertmanager ─────────────────────────────────
+alertmanager:
+  image: prom/alertmanager
+  imageTag: v0.27.0
+  replicas: 1
+  service:
+    type: ClusterIP
+    port: 9093
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "64Mi"
+    limits:
+      cpu: "200m"
+      memory: "256Mi"

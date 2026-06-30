@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "jemon.fullname" . }}-alertmanager
+  labels:
+    {{- include "jemon.labels" . | nindent 4 }}
+    app.kubernetes.io/component: alertmanager
+spec:
+  replicas: {{ .Values.alertmanager.replicas }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "jemon.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: alertmanager
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "jemon.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: alertmanager
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/alertmanager-configmap.yaml") . | sha256sum }}
+    spec:
+      containers:
+        - name: alertmanager
+          image: "{{ .Values.alertmanager.image }}:{{ .Values.alertmanager.imageTag }}"
+          imagePullPolicy: IfNotPresent
+          args:
+            - "--config.file=/etc/alertmanager/config.yml"
+            - "--storage.path=/alertmanager"
+          ports:
+            - name: http
+              containerPort: {{ .Values.alertmanager.service.port }}
+              protocol: TCP
+          volumeMounts:
+            - name: alertmanager-config
+              mountPath: /etc/alertmanager
+              readOnly: true
+            - name: alertmanager-data
+              mountPath: /alertmanager
+          resources:
+            {{- toYaml .Values.alertmanager.resources | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /-/healthy
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 15
+      volumes:
+        - name: alertmanager-config
+          configMap:
+            name: {{ include "jemon.fullname" . }}-alertmanager
+        - name: alertmanager-data
+          emptyDir: {}
