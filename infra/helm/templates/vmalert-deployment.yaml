@@ -28,6 +28,7 @@ spec:
           args:
             - "-datasource.url=http://{{ include "jemon.fullname" . }}-victoriametrics:{{ .Values.victoriametrics.service.port }}"
             - "-rule=/etc/vmalert/rules.yml"
+            - "-notifier.blackhole"
             - "-remoteWrite.url=http://{{ include "jemon.fullname" . }}-victoriametrics:{{ .Values.victoriametrics.service.port }}/api/v1/write"
             - "-httpListenAddr=:{{ .Values.vmalert.service.port }}"
             - "-evaluationInterval={{ .Values.vmalert.evaluationInterval }}"

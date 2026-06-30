@@ -29,8 +29,8 @@ spec:
             - "-promscrape.config=/etc/vmagent/scrape.yml"
             - "-remoteWrite.url=http://{{ include "jemon.fullname" . }}-victoriametrics:{{ .Values.victoriametrics.service.port }}/api/v1/write"
             - "-remoteWrite.url=http://{{ include "jemon.fullname" . }}-vm-rollup:{{ .Values.victoriametricsRollup.service.port }}/api/v1/write"
+            - "-remoteWrite.streamAggr.config="
             - "-remoteWrite.streamAggr.config=/etc/vmagent/stream-agg.yml"
-            - "-remoteWrite.streamAggr.keepInput=false"
           volumeMounts:
             - name: vmagent-config
               mountPath: /etc/vmagent

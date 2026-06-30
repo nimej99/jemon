@@ -23,7 +23,7 @@ data:
           - source_labels: [__param_target]
             target_label: instance
   stream-agg.yml: |
-    - match: "if.*"
+    - match: '{__name__=~"if.+"}'
       interval: 5m
       outputs:
         - total
