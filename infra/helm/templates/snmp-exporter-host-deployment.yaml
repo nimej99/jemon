@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "jemon.fullname" . }}-snmp-exporter-host
+  labels:
+    {{- include "jemon.labels" . | nindent 4 }}
+    app.kubernetes.io/component: snmp-exporter-host
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "jemon.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: snmp-exporter-host
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "jemon.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: snmp-exporter-host
+    spec:
+      containers:
+        - name: snmp-exporter-host
+          image: "{{ .Values.snmpExporterHost.image }}:{{ .Values.snmpExporterHost.imageTag }}"
+          imagePullPolicy: IfNotPresent
+          args:
+            - --config.file=/etc/snmp_exporter/snmp.yml
+          ports:
+            - name: http
+              containerPort: 9116
+              protocol: TCP
+          volumeMounts:
+            - name: snmp-host-config
+              mountPath: /etc/snmp_exporter/snmp.yml
+              subPath: snmp.yml
+          resources:
+            {{- toYaml .Values.snmpExporterHost.resources | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 20
+      volumes:
+        - name: snmp-host-config
+          configMap:
+            name: {{ include "jemon.fullname" . }}-snmp-host

@@ -24,6 +24,14 @@ api:
       memory: "512Mi"
   env:
     PORT: "3001"
+  ## Secrets injected via api-secret (CHANGE ME in production)
+  ## CRED_KEY must be >=16 characters
+  secrets:
+    CRED_KEY: "CHANGE_ME_16CHARS"
+    AUTH_SECRET: "CHANGE_ME_in_production"
+    ADMIN_USER: "admin"
+    ADMIN_PASSWORD: "CHANGE_ME_in_production"
+
 
 ## ── Web ─────────────────────────────────────────────────────────────────────
 web:
@@ -147,3 +155,26 @@ alertmanager:
     limits:
       cpu: "200m"
       memory: "256Mi"
+## ── SNMP Exporter (if_mib — built-in config) ────────────────────────────────
+snmpExporter:
+  image: prom/snmp-exporter
+  imageTag: v0.26.0
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "64Mi"
+    limits:
+      cpu: "200m"
+      memory: "128Mi"
+
+## ── SNMP Exporter Host (host_resources — custom config) ─────────────────────
+snmpExporterHost:
+  image: prom/snmp-exporter
+  imageTag: v0.26.0
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "64Mi"
+    limits:
+      cpu: "200m"
+      memory: "128Mi"

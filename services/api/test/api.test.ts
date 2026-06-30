@@ -7,6 +7,8 @@ import { generateScrapeTargets } from '../dist/configgen.js';
 
 // Must be set before the app module is loaded so config.ts picks it up.
 process.env['CRED_KEY'] = 'test-cred-key-for-unit-tests-0000';
+process.env['ADMIN_USER'] = 'admin';
+process.env['ADMIN_PASSWORD'] = 'admin-test-pw';
 
 // ── Clear any stale device data so decryption never fails ────────────────────
 // (Mirrors the guard in tests/api.e2e.ts)
@@ -14,8 +16,12 @@ const _here = dirname(fileURLToPath(import.meta.url));
 const DATA_FILE = join(_here, '..', 'data', 'devices.json');
 const _originalDevices = existsSync(DATA_FILE) ? readFileSync(DATA_FILE, 'utf8') : '[]';
 writeFileSync(DATA_FILE, '[]', 'utf8');
+const USERS_FILE = join(_here, '..', 'data', 'users.json');
+const _originalUsers = existsSync(USERS_FILE) ? readFileSync(USERS_FILE, 'utf8') : null;
+if (existsSync(USERS_FILE)) writeFileSync(USERS_FILE, '[]', 'utf8');
 process.on('exit', () => {
   try { writeFileSync(DATA_FILE, _originalDevices, 'utf8'); } catch { /* ignore */ }
+  try { if (_originalUsers !== null) writeFileSync(USERS_FILE, _originalUsers, 'utf8'); } catch { /* ignore */ }
 });
 
 // Dynamic import after env is configured.
@@ -56,11 +62,20 @@ test('POST /devices then GET /devices masks credentials', async () => {
     snmp: { version: 'v2c', community: 'public' },
   };
 
+  const login = await app.inject({
+    method: 'POST',
+    url: '/auth/login',
+    payload: { username: 'admin', password: 'admin-test-pw' },
+    headers: { 'content-type': 'application/json' },
+  });
+  assert.strictEqual(login.statusCode, 200, 'admin login should succeed');
+  const token = (login.json() as { token: string }).token;
+
   const post = await app.inject({
     method: 'POST',
     url: '/devices',
     payload: device,
-    headers: { 'content-type': 'application/json' },
+    headers: { 'content-type': 'application/json', authorization: `Bearer ${token}` },
   });
   assert.strictEqual(post.statusCode, 201);
   assert.deepStrictEqual(post.json(), { id: 'test-device-masking' });
@@ -74,6 +89,16 @@ test('POST /devices then GET /devices masks credentials', async () => {
   const found = devices.find(d => d.id === 'test-device-masking');
   assert.ok(found, 'device should appear in GET /devices');
   assert.strictEqual(found.snmp.community, '***', 'community must be masked');
+});
+
+test('POST /devices without a token is rejected (401)', async () => {
+  const res = await app.inject({
+    method: 'POST',
+    url: '/devices',
+    payload: { id: 'no-auth', name: 'x', siteId: 's', ip: '1.2.3.4', snmp: { version: 'v2c', community: 'public' } },
+    headers: { 'content-type': 'application/json' },
+  });
+  assert.strictEqual(res.statusCode, 401);
 });
 
 test('configgen generates vmagent scrape targets (bare IP, snmp-exporter relabel pattern)', () => {

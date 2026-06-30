@@ -18,7 +18,22 @@ data:
         relabel_configs:
           - source_labels: [__address__]
             target_label: __param_target
-          - replacement: "jemon-snmp-exporter:9116"
+          - replacement: "{{ include "jemon.fullname" . }}-snmp-exporter:9116"
+            target_label: __address__
+          - source_labels: [__param_target]
+            target_label: instance
+
+      - job_name: snmp_host_mib
+        metrics_path: /snmp
+        params:
+          auth: [public_v2]
+          module: [host_resources]
+        static_configs:
+          - targets: []  # populated at runtime via configgen
+        relabel_configs:
+          - source_labels: [__address__]
+            target_label: __param_target
+          - replacement: "{{ include "jemon.fullname" . }}-snmp-exporter-host:9116"
             target_label: __address__
           - source_labels: [__param_target]
             target_label: instance
