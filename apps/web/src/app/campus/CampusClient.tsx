@@ -1,104 +1,228 @@
 "use client";
 
+import { useState } from "react";
 import dynamic from "next/dynamic";
-import type { BuildingData } from "@jemon/ui/scenes";
+import {
+  Activity,
+  BarChart3,
+  Bell,
+  ChevronDown,
+  Cpu,
+  Home,
+  MemoryStick,
+  Moon,
+  Network,
+  RefreshCw,
+  Settings,
+  Shield,
+  Thermometer,
+  Users,
+} from "lucide-react";
+import {
+  AlertList,
+  AppShell,
+  DonutSummary,
+  LastUpdated,
+  NavRail,
+  PageHeader,
+  Panel,
+  StatCard,
+  TopBar,
+  fmtBps,
+  fmtCount,
+  fmtPercent,
+  fmtTemp,
+} from "@jemon/ui";
+import { tokens, metricAccent } from "@jemon/ui/theme";
 import { AuthGate } from "../_lib/auth";
-import { UserNav } from "../_components/UserNav";
+import { useCampusData, CAMPUS_THRESHOLDS } from "./useCampusData";
 
-const CampusScene = dynamic(
-  () => import("@jemon/ui/scenes").then((m) => m.CampusScene),
+const IsoCampusScene = dynamic(
+  () => import("@jemon/ui/scenes").then((m) => m.IsoCampusScene),
   {
     ssr: false,
     loading: () => (
-      <div className="flex h-[640px] items-center justify-center text-xs text-slate-500">
-        Loading 3-D campus…
+      <div className="flex h-full items-center justify-center">
+        <span className="text-[13px] text-muted">
+          3D 캠퍼스 씬을 불러오는 중…
+        </span>
       </div>
     ),
   },
 );
 
-// Static building fixtures — replace with live metric fetches when SNMP campus
-// data is available.
-const buildings: BuildingData[] = [
-  {
-    id: "eng",
-    label: "공대 1호관",
-    position: [-6, -4],
-    size: [4, 6, 4],
-    metrics: { cpu: 62, mem: 48, traffic: 71, temp: 24 },
-  },
-  {
-    id: "sci",
-    label: "자연대",
-    position: [6, -4],
-    size: [4, 4, 4],
-    metrics: { cpu: 35, mem: 55, traffic: 40, temp: 22 },
-  },
-  {
-    id: "lib",
-    label: "중앙도서관",
-    position: [0, 6],
-    size: [5, 8, 5],
-    metrics: { cpu: 78, mem: 82, traffic: 90, temp: 27 },
-  },
-  {
-    id: "dorm",
-    label: "기숙사",
-    position: [-8, 6],
-    size: [3, 5, 3],
-    metrics: { cpu: 20, mem: 30, traffic: 15, temp: 21 },
-  },
+const NAV_ITEMS = [
+  { id: "home", icon: <Home size={22} />, label: "홈", href: "/campus" },
+  { id: "activity", icon: <Activity size={22} />, label: "실시간", href: "/dashboard" },
+  { id: "charts", icon: <BarChart3 size={22} />, label: "분석", href: "/dashboard" },
+  { id: "security", icon: <Shield size={22} />, label: "보안", href: "/racks" },
+  { id: "settings", icon: <Settings size={22} />, label: "설정", href: "/dashboard" },
 ];
 
+/** Split "4.58 Gbps" → ["4.58", "Gbps"] for StatCard value/unit slots. */
+function splitUnit(formatted: string): [string, string | undefined] {
+  const i = formatted.lastIndexOf(" ");
+  if (i === -1) return [formatted, undefined];
+  return [formatted.slice(0, i), formatted.slice(i + 1)];
+}
+
 export function CampusClient() {
+  const data = useCampusData();
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
+
+  const [trafficValue, trafficUnit] = splitUnit(
+    fmtBps(data.kpis.totalTrafficBps),
+  );
+
   return (
     <AuthGate>
-      <div className="min-h-screen bg-slate-900 p-6">
-        {/* Unified nav bar */}
-        <UserNav activePage="campus" />
+      <AppShell
+        nav={
+          <NavRail
+            items={NAV_ITEMS}
+            activeId="home"
+            logo={
+              <span className="flex h-8 w-8 flex-col items-center justify-center gap-[3px]">
+                <span className="h-[2px] w-5 rounded-full bg-accent-blue" />
+                <span className="h-[2px] w-5 rounded-full bg-accent-blue opacity-70" />
+                <span className="h-[2px] w-5 rounded-full bg-accent-blue opacity-40" />
+              </span>
+            }
+          />
+        }
+        topBar={
+          <TopBar title="Campus Monitoring System">
+            <button
+              type="button"
+              aria-label="테마 전환"
+              className="flex h-9 w-9 items-center justify-center rounded-lg text-on-muted transition-colors hover:bg-[var(--bg-hover)]"
+            >
+              <Moon size={18} />
+            </button>
+            <button
+              type="button"
+              aria-label="알림"
+              className="relative flex h-9 w-9 items-center justify-center rounded-lg text-on-muted transition-colors hover:bg-[var(--bg-hover)]"
+            >
+              <Bell size={18} />
+              {data.alerts.length > 0 && (
+                <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-warn" />
+              )}
+            </button>
+            <button
+              type="button"
+              className="flex items-center gap-2 rounded-lg border border-subtle px-3 py-1.5 text-[13px] text-on-muted transition-colors hover:bg-[var(--bg-hover)]"
+            >
+              전체 캠퍼스
+              <ChevronDown size={14} className="text-muted" />
+            </button>
+          </TopBar>
+        }
+      >
+        <div className="flex min-h-full flex-col gap-4 p-6">
+          <PageHeader
+            title="캠퍼스 네트워크 현황"
+            subtitle="실시간 모니터링 대시보드"
+            right={
+              <LastUpdated
+                timestamp={data.updatedAt}
+                onRefresh={data.refresh}
+                refreshIcon={<RefreshCw size={15} />}
+              />
+            }
+          />
 
-        {/* ── Page header ── */}
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-bold text-slate-100">
-              Campus Topology — 3-D
-            </h1>
-            <p className="mt-0.5 text-xs text-slate-500">
-              건물별 CPU · 메모리 · 트래픽 · 온도 현황
-            </p>
-          </div>
-          {/* Legend chips */}
-          <div className="flex items-center gap-3">
-            {(
-              [
-                { color: "#22c55e", label: "OK" },
-                { color: "#f59e0b", label: "Warn" },
-                { color: "#ef4444", label: "Crit" },
-              ] as const
-            ).map(({ color, label }) => (
-              <div key={label} className="flex items-center gap-1.5">
-                <span
-                  className="inline-block h-2 w-2 rounded-full"
-                  style={{ backgroundColor: color }}
+          {/* Hero scene + side panel */}
+          <div className="grid flex-1 grid-cols-[minmax(0,1fr)_300px] gap-4">
+            <div className="relative min-h-[520px] overflow-hidden rounded-hero">
+              <IsoCampusScene
+                buildings={data.buildings}
+                links={data.links}
+                hoveredId={hoveredId}
+                onHover={setHoveredId}
+                thresholds={CAMPUS_THRESHOLDS}
+                className="h-full w-full"
+              />
+            </div>
+
+            <div className="flex flex-col gap-4">
+              <Panel title="장비 상태 요약">
+                <DonutSummary
+                  segments={[
+                    { label: "정상", value: data.summary.ok, color: tokens.color.statusOk },
+                    { label: "주의", value: data.summary.warn, color: tokens.color.statusWarn },
+                    { label: "장애", value: data.summary.crit, color: tokens.color.statusCrit },
+                  ]}
                 />
-                <span className="text-[11px] text-slate-400">{label}</span>
-              </div>
-            ))}
-          </div>
-        </div>
+              </Panel>
 
-        {/* ── 3-D scene panel ── */}
-        <div className="overflow-hidden rounded-lg border border-slate-700/80 bg-slate-800/60 shadow-sm">
-          <div className="border-b border-slate-700/60 px-4 py-2">
-            <h3 className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-              Live Campus View
-            </h3>
+              <Panel
+                title="실시간 알림"
+                action={
+                  <button
+                    type="button"
+                    className="text-xs text-accent-blue transition-colors hover:text-on-surface"
+                  >
+                    더보기 ›
+                  </button>
+                }
+                className="flex-1"
+              >
+                <AlertList
+                  items={data.alerts}
+                  emptyText="모든 시스템이 정상 운영 중입니다."
+                />
+              </Panel>
+            </div>
           </div>
-          <div className="p-4">
-            <CampusScene buildings={buildings} width={1000} height={620} />
+
+          {/* KPI strip */}
+          <div className="grid grid-cols-5 gap-4">
+            <StatCard
+              icon={<Cpu size={16} />}
+              label="전체 CPU 사용률"
+              value={fmtPercent(data.kpis.cpuAvg)}
+              accent={metricAccent.cpu}
+              series={data.kpis.series.cpu}
+              caption="평균 사용률"
+            />
+            <StatCard
+              icon={<MemoryStick size={16} />}
+              label="전체 메모리 사용률"
+              value={fmtPercent(data.kpis.memAvg)}
+              accent={tokens.color.accentPurple}
+              series={data.kpis.series.mem}
+              caption="평균 사용률"
+            />
+            <StatCard
+              icon={<Network size={16} />}
+              label="전체 트래픽"
+              value={trafficValue}
+              unit={trafficUnit}
+              accent={metricAccent.traffic}
+              series={data.kpis.series.traffic}
+              caption="총 트래픽"
+            />
+            <StatCard
+              icon={<Thermometer size={16} />}
+              label="평균 온도"
+              value={fmtTemp(data.kpis.tempAvg)}
+              accent={metricAccent.temp}
+              series={data.kpis.series.temp}
+              caption="평균 온도"
+            />
+            <StatCard
+              icon={<Users size={16} />}
+              label="총 접속 사용자"
+              value={fmtCount(data.kpis.totalUsers)}
+              unit="명"
+              accent={tokens.color.accentCyan}
+              series={data.kpis.series.users}
+              caption="현재 접속 수"
+            />
           </div>
         </div>
-      </div>
+      </AppShell>
     </AuthGate>
   );
 }
