@@ -2,14 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #0f172a;
-  --foreground: #f1f5f9;
-}
+/* Token variables are injected by <ThemeStyles/> from @jemon/ui/theme. */
 
 body {
-  background-color: var(--background);
-  color: var(--foreground);
+  background-color: var(--bg-page);
+  color: var(--text-primary);
+}
+
+/* All metric numbers align on tabular figures. */
+.tabular-nums,
+[data-metric] {
+  font-variant-numeric: tabular-nums;
 }
 
 /* Thin scrollbar for dark theme */
@@ -18,12 +21,22 @@ body {
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #1e293b;
+  background: var(--bg-card-solid);
 }
 ::-webkit-scrollbar-thumb {
-  background: #334155;
+  background: var(--border-strong);
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #475569;
+  background: var(--text-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

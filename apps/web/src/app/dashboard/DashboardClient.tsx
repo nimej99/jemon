@@ -417,10 +417,9 @@ function mapVmAlertToUi(a: VmAlert): Alert {
         : "info";
   return {
     id: a.id || a.alertId,
-    level,
+    severity: level,
     message: a.annotations["summary"] ?? a.name,
-    timestamp: a.activeAt ? new Date(a.activeAt).toLocaleString() : undefined,
-    source: a.name,
+    ts: a.activeAt ? Date.parse(a.activeAt) : Date.now(),
   };
 }
 
@@ -435,7 +434,7 @@ function ActiveAlerts() {
       {state.status === "loading" && alerts.length === 0 ? (
         <p className="text-sm text-slate-500">Loading alerts…</p>
       ) : (
-        <AlertList alerts={alerts} emptyMessage="All clear — no active alerts" />
+        <AlertList items={alerts} emptyText="All clear — no active alerts" />
       )}
     </Panel>
   );

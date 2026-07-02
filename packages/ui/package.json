@@ -12,6 +12,26 @@
       "default": "./dist/index.js"
     },
     "./preset": "./dist/theme/preset.js",
+    "./theme": {
+      "types": "./dist/theme/index.d.ts",
+      "import": "./dist/theme/index.js",
+      "default": "./dist/theme/index.js"
+    },
+    "./shell": {
+      "types": "./dist/shell/index.d.ts",
+      "import": "./dist/shell/index.js",
+      "default": "./dist/shell/index.js"
+    },
+    "./kpi": {
+      "types": "./dist/kpi/index.d.ts",
+      "import": "./dist/kpi/index.js",
+      "default": "./dist/kpi/index.js"
+    },
+    "./lib": {
+      "types": "./dist/lib/index.d.ts",
+      "import": "./dist/lib/index.js",
+      "default": "./dist/lib/index.js"
+    },
     "./scenes": {
       "types": "./dist/scenes/index.d.ts",
       "import": "./dist/scenes/index.js",
@@ -30,22 +50,24 @@
     "test": "echo \"(no tests yet)\""
   },
   "dependencies": {
+    "@react-three/postprocessing": "^2.19.1",
     "echarts": "^5.5.1",
+    "postprocessing": "^6.36.0",
     "uplot": "^1.6.31"
   },
   "peerDependencies": {
+    "@react-three/drei": ">=9.0.0",
+    "@react-three/fiber": ">=8.0.0",
     "react": ">=18",
     "react-dom": ">=18",
-    "three": ">=0.160.0",
-    "@react-three/fiber": ">=8.0.0",
-    "@react-three/drei": ">=9.0.0"
+    "three": ">=0.160.0"
   },
   "devDependencies": {
+    "@react-three/drei": "^9.122.0",
+    "@react-three/fiber": "^8.17.10",
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
     "@types/three": "^0.170.0",
-    "@react-three/fiber": "^8.17.10",
-    "@react-three/drei": "^9.122.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "three": "^0.170.0"

@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import "pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css";
 import "./globals.css";
+import { ThemeStyles } from "@jemon/ui/theme";
 import { Providers } from "./_lib/Providers";
 
 export const metadata: Metadata = {
@@ -13,8 +15,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark">
-      <body className="min-h-screen bg-slate-900 text-slate-100 antialiased">
+    <html lang="ko" className="dark">
+      <head>
+        <ThemeStyles />
+      </head>
+      <body className="min-h-screen bg-page font-sans text-on-surface antialiased">
         <Providers>{children}</Providers>
       </body>
     </html>

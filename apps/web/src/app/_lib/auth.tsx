@@ -103,17 +103,23 @@ export function useAuth(): AuthContextValue {
  * Renders children only when authenticated.
  * Returns null while the auth state is loading or when unauthenticated
  * (and triggers a redirect to /login).
+ *
+ * Demo mode (`NEXT_PUBLIC_DEMO=1`) bypasses the gate — used for design
+ * verification screenshots and offline demos with seeded mock data.
  */
+const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO === "1";
+
 export function AuthGate({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!isLoading && !user) {
+    if (!DEMO_MODE && !isLoading && !user) {
       router.push("/login");
     }
   }, [user, isLoading, router]);
 
+  if (DEMO_MODE) return <>{children}</>;
   if (isLoading || !user) return null;
   return <>{children}</>;
 }

@@ -15,3 +15,6 @@ export type {
   MetricState,
   CatalogEntry,
 } from "./types.js";
+
+export { mulberry32, seedOf, randomWalk, walker } from "./mock.js";
+export type { WalkOptions } from "./mock.js";
